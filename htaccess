@@ -1,0 +1,17 @@
+Options -Indexes
+RewriteEngine On
+
+# If you are at: http://localhost/pregnancy-risk-app/
+RewriteBase /pregnancy_risk/
+
+# If you are at: http://localhost/ (project is directly in htdocs root)
+# RewriteBase /
+
+# Send EVERYTHING to public/, but still allow existing public assets to work
+RewriteCond %{REQUEST_URI} !^/pregnancy_risk/public/ [NC]
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Finally, route to front controller inside public
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^public/(.*)$ public/index.php?url=$1 [QSA,L]
