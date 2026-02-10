@@ -78,11 +78,17 @@
             Logout
           </a>
 
-        <?php else: ?>
+              <?php else: ?>
           <!-- Login -->
           <a href="<?= base_url('login') ?>"
             class="hidden sm:inline-flex px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-sm">
             Sign in
+          </a>
+
+          <!-- Register -->
+          <a href="<?= base_url('register') ?>"
+            class="hidden sm:inline-flex px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-sm">
+            Sign up
           </a>
 
           <!-- CTA -->
@@ -91,6 +97,7 @@
             Assess risk
           </a>
         <?php endif; ?>
+
 
       </div>
     </div>

@@ -1,7 +1,6 @@
 <?php
-
 define('BASE_PATH', dirname(__DIR__));
-// echo BASE_PATH;
+
 // Core classes
 require_once BASE_PATH . '/app/Core/helpers.php';
 require_once BASE_PATH . '/app/Core/Auth.php';
@@ -20,19 +19,19 @@ require_once BASE_PATH . '/app/Controllers/MonitoringController.php';
 
 $router = new Router();
 
-$router->get('/', function () {
-  (new HomeController())->index();
-});
+$router->get('/', fn() => (new HomeController())->index());
 
-$router->get('/dashboard', function () {
-  (new DashboardController())->index();
-});
+$router->get('/dashboard', fn() => (new DashboardController())->index());
 
-$router->post('/api/predict', function () {
-  (new PredictionController())->predict();
-});
+$router->post('/api/predict', fn() => (new PredictionController())->predict());
+
+// Auth
 $router->get('/login', fn() => (new AuthController())->loginForm());
 $router->post('/api/login', fn() => (new AuthController())->login());
+
+$router->get('/register', fn() => (new AuthController())->registerForm());
+$router->post('/api/register', fn() => (new AuthController())->register());
+
 $router->get('/logout', fn() => (new AuthController())->logout());
 
 $router->get('/export/csv', fn() => (new ExportController())->csv());

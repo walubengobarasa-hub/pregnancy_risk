@@ -20,7 +20,7 @@ ob_start();
 
       <p class="mt-5 text-slate-600 text-base leading-relaxed max-w-xl">
         Predict high-risk pregnancy probability using clinical indicators (BP, blood sugar, temperature, BMI, and history).
-        Get instant results with a clean, clinician-friendly interface.
+        Get instant results and personalized guidance (education, actions, and alerts).
       </p>
 
       <div class="mt-7 flex flex-wrap gap-3">
@@ -39,7 +39,7 @@ ob_start();
             ['label'=>'Assessments', 'value'=>'Fast'],
             ['label'=>'Model', 'value'=>'XGBoost'],
             ['label'=>'Explainability', 'value'=>'SHAP-ready'],
-            ['label'=>'Deployment', 'value'=>'API + PHP'],
+            ['label'=>'Output Stage', 'value'=>'Guidance + Alerts'],
           ];
         ?>
         <?php foreach($stats as $s): ?>
@@ -72,7 +72,7 @@ ob_start();
           </div>
 
           <div class="mt-6 text-xs text-slate-500">
-            Tip: Ensure binary fields are 0/1. The system validates inputs before prediction.
+            Tip: Binary fields must be 0/1. This tool provides educational decision support, not a diagnosis.
           </div>
         </div>
 
@@ -139,10 +139,12 @@ ob_start();
             </select>
           </label>
         <?php endforeach; ?>
+
         <label class="sm:col-span-2 flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" name="explain" value="1" class="rounded border-slate-300">
           Include explanation (SHAP)
         </label>
+
         <div class="sm:col-span-2 flex items-center gap-3 pt-2">
           <button
             id="submitBtn"
@@ -170,7 +172,7 @@ ob_start();
       <div class="rounded-[2rem] bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-7 shadow-xl">
         <h3 class="text-2xl font-semibold">Choose our most expert dedicated specialists</h3>
         <p class="mt-2 text-white/80 text-sm">
-          The tool supports decision-making by summarizing risk probability and tier.
+          After assessment, you’ll receive personalized education, recommended actions, and early warning alerts.
         </p>
         <div class="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/15 border border-white/20 text-sm">
           Book your slot →
@@ -197,6 +199,9 @@ ob_start();
     </div>
   </section>
 
+  <!-- OUTPUT STAGE PANEL (rendered by JS after prediction) -->
+  <div id="personalizedPanel"></div>
+
   <!-- ABOUT -->
   <section id="about" class="mt-16 rounded-[2rem] bg-white border border-slate-200 shadow-sm p-7">
     <h2 class="text-2xl font-semibold">System Summary</h2>
@@ -204,6 +209,9 @@ ob_start();
       This application follows a microservice approach:
       PHP MVC handles the user interface, validation, database storage, and reporting,
       while the ML model is served through an API for scalable inference.
+      <div class="mt-3 text-xs text-slate-500">
+        Note: This tool provides educational decision support and does not replace professional medical advice.
+      </div>
     </div>
   </section>
 

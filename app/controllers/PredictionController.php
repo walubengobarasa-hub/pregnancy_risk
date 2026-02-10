@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/../Models/Assessment.php';
+require_once __DIR__ . '/../Models/InterventionContent.php';
+require_once __DIR__ . '/../Models/InteractionEvent.php';
+require_once __DIR__ . '/../Models/Alert.php';
+require_once __DIR__ . '/../Core/InterventionEngine.php';
 
 class PredictionController extends Controller {
 
@@ -10,13 +14,11 @@ class PredictionController extends Controller {
     $payload = json_decode(file_get_contents('php://input'), true);
     if (!is_array($payload)) $this->json(['error' => 'Invalid JSON body'], 400);
 
-    // Read explain toggle coming from JS
     $explain = !empty($payload['__explain']);
     $topK    = isset($payload['__top_k']) ? (int)$payload['__top_k'] : 6;
 
     unset($payload['__explain'], $payload['__top_k']);
 
-    // Required fields (exact names)
     $required = [
       "Age","Systolic BP","Diastolic","BS","Body Temp","BMI",
       "Previous Complications","Preexisting Diabetes","Gestational Diabetes",
@@ -32,7 +34,6 @@ class PredictionController extends Controller {
       }
     }
 
-    // Normalize numeric types
     $numeric = ["Age","Systolic BP","Diastolic","BS","Body Temp","BMI","Heart Rate"];
     foreach ($numeric as $k) $payload[$k] = (float)$payload[$k];
 
@@ -79,15 +80,51 @@ class PredictionController extends Controller {
     $payload['probability_high_risk'] = (float)$resp['probability_high_risk'];
     $payload['risk_tier'] = (string)$resp['risk_tier'];
 
-    $id = Assessment::create($payload);
+    $assessmentId = Assessment::create($payload);
+    $assessmentRow = Assessment::find($assessmentId);
+
+    // Build personalized bundle (education + actions + impact prompts)
+    $bundle = InterventionEngine::buildBundle(
+      $assessmentRow ?: ['risk_level'=>$payload['risk_tier'], 'risk_probability'=>$payload['probability_high_risk']],
+      $resp['top_contributors'] ?? null
+    );
+
+    // Log interaction event (feedback loop)
+    $user = Auth::user();
+    $userId = $user ? (int)$user['id'] : null;
+    InteractionEvent::log($userId, $assessmentId, 'assessment_completed', [
+      'risk_tier' => $payload['risk_tier'],
+      'probability_high_risk' => $payload['probability_high_risk'],
+      'explain' => $explain ? 1 : 0
+    ]);
+
+    // Create alert if bundle suggests it
+    $alertId = null;
+    if (!empty($bundle['alert'])) {
+      $alertId = Alert::create([
+        'user_id' => $userId,
+        'assessment_id' => $assessmentId,
+        'severity' => $bundle['alert']['severity'] ?? 'warning',
+        'title' => $bundle['alert']['title'] ?? 'Alert',
+        'message' => $bundle['alert']['message'] ?? '',
+      ]);
+      InteractionEvent::log($userId, $assessmentId, 'alert_created', [
+        'alert_id' => $alertId,
+        'severity' => $bundle['alert']['severity'] ?? 'warning'
+      ]);
+    }
 
     $this->json([
-      'id' => $id,
+      'id' => $assessmentId,
       'probability_high_risk' => $payload['probability_high_risk'],
       'risk_tier' => $payload['risk_tier'],
       'binary_label' => (int)($resp['binary_label'] ?? 0),
       'threshold_used' => (float)($resp['threshold_used'] ?? 0.5),
       'top_contributors' => $resp['top_contributors'] ?? null,
+
+      // OUTPUT STAGE
+      'bundle' => $bundle,
+      'alert_id' => $alertId,
     ]);
   }
 }

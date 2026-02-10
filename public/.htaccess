@@ -1,10 +1,13 @@
-RewriteEngine On
 Options -Indexes
+<IfModule mod_rewrite.c>
+RewriteEngine On
 
-RewriteBase /pregnancy_risk/public/
+# IMPORTANT: remove RewriteBase to avoid loops
+# RewriteBase /pregnancy_risk/public/
 
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 RewriteRule ^ index.php [L,QSA]
+</IfModule>

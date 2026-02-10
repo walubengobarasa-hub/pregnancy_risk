@@ -1,16 +1,11 @@
 Options -Indexes
 RewriteEngine On
 
-# Always route root to /public/
-DirectoryIndex public/index.php
-
-# If request already targets /public, do nothing
+# If request already starts with /public, don't rewrite again (prevents loop)
 RewriteRule ^public/ - [L]
 
-# If a real file/dir exists in root, serve it
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# Send the base folder to /public/
+RewriteRule ^$ public/ [L]
 
-# Otherwise forward to /public/
-RewriteRule ^(.*)$ public/$1 [L,QSA]
+# Forward everything else to /public/...
+RewriteRule ^(.+)$ public/$1 [L,QSA]

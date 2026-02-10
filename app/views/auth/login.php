@@ -26,6 +26,11 @@ ob_start();
       </button>
 
       <div id="loginError" class="hidden text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl p-3"></div>
+
+      <div class="text-sm text-slate-600">
+        Don’t have an account?
+        <a class="text-indigo-700 hover:text-indigo-900 font-medium" href="<?= base_url('register') ?>">Create one</a>
+      </div>
     </form>
   </div>
 </main>
