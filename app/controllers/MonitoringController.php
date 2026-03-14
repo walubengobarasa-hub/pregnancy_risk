@@ -4,8 +4,6 @@ class MonitoringController extends Controller {
     Auth::requireRole(['clinician','admin']);
 
     $db = Database::connect();
-
-    // Monthly averages of key inputs + risk probability
     $sql = "
       SELECT
         DATE_FORMAT(created_at, '%Y-%m') AS ym,

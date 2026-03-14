@@ -8,20 +8,22 @@ require_once __DIR__ . '/../Core/InterventionEngine.php';
 class SymptomsController extends Controller {
 
   public function index(): void {
-    // Can be public; if logged in, we tie to user_id automatically in model
+    Auth::requireLogin();
     $this->view('symptoms', []);
   }
 
   public function submit(): void {
+    Auth::requireLogin();
     $payload = json_input();
     if (!$payload) $this->json(['error' => 'Invalid JSON body'], 400);
 
     $assessmentId = isset($payload['assessment_id']) ? (int)$payload['assessment_id'] : null;
+    if ($assessmentId && !Assessment::ownedByCurrentUser($assessmentId)) {
+      $this->json(['error' => 'Assessment not found or access denied'], 403);
+    }
     $latestAssessment = $assessmentId ? Assessment::find($assessmentId) : null;
 
-    $user = Auth::user();
-    $userId = $user ? (int)$user['id'] : null;
-
+    $userId = Auth::id();
     $row = [
       'user_id' => $userId,
       'assessment_id' => $assessmentId,
@@ -37,17 +39,14 @@ class SymptomsController extends Controller {
     ];
 
     $reportId = SymptomReport::create($row);
-
     $evaluation = InterventionEngine::evaluateSymptoms($row, $latestAssessment);
 
-    // Log interaction
     InteractionEvent::log($userId, $assessmentId, 'symptom_report_submitted', [
       'report_id' => $reportId,
       'score' => $evaluation['score'],
       'severity' => $evaluation['severity'],
     ]);
 
-    // Create alert if warning/urgent
     $alertId = null;
     if (in_array($evaluation['severity'], ['warning','urgent'], true)) {
       $alertId = Alert::create([
@@ -76,13 +75,12 @@ class SymptomsController extends Controller {
   }
 
   public function acknowledgeAlert(): void {
+    Auth::requireLogin();
     $payload = json_input();
     $id = isset($payload['alert_id']) ? (int)$payload['alert_id'] : 0;
     if ($id <= 0) $this->json(['error' => 'alert_id is required'], 422);
 
-    $user = Auth::user();
-    $userId = $user ? (int)$user['id'] : null;
-
+    $userId = Auth::id();
     $ok = Alert::acknowledge($id, $userId);
     if (!$ok) $this->json(['error' => 'Unable to acknowledge alert'], 404);
 
